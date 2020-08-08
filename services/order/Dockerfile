@@ -10,4 +10,4 @@ COPY ./src/* ./
 
 EXPOSE 8080
 
-CMD [ "node", "orderservice.js" ]
+CMD [ "node", "service.js" ]
