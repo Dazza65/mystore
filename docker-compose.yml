@@ -1,0 +1,17 @@
+version: '2.0'
+services:
+  customerorderservice:
+    image: customerorderservice
+    build: ./customerorderservice
+    ports:
+      - "8080:8080"
+  orderservice:
+    image: orderservice
+    build: ./orderservice
+    ports:
+      - "9000:8080"
+  customerservice:
+    image: customerservice
+    build: ./customerservice
+    ports:
+      - "9010:8080"
