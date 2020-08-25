@@ -22,6 +22,10 @@ app.get("/customers/", function(req,res){
    res.send(customerArray); 
 });
 
+app.get(`/${service}/status`, function(req,res){
+  console.log("Status check...");
+  res.send("{OK}"); 
+});
 
 app.listen(port, function (){
   console.log(`Service ${service} running on port: ${port}`);
