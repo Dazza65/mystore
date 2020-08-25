@@ -5,6 +5,9 @@ services:
     build: ./customerorderservice
     ports:
       - "8080:8080"
+    environment:
+      - CUSTOMER_SVC=customerservice
+      - ORDER_SVC=orderservice
   orderservice:
     image: orderservice
     build: ./orderservice
