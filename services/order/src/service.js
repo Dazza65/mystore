@@ -12,12 +12,17 @@ const orders = [
 let orderList = [];
 
 app.get(`/${service}/`, function(req,res){
-  console.log("in get customer: " + req.query.customerID);
+  console.log("Get customer with ID: " + req.query.customerID);
   orderList = orders.filter( order => { 
     return (order.customerId === parseInt(req.query.customerID));
   });
 
    res.send(orderList); 
+});
+
+app.get(`/${service}/status`, function(req,res){
+  console.log("Status check...");
+  res.send("{OK}"); 
 });
 
 app.listen(port, function (){
