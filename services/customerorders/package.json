@@ -1,0 +1,23 @@
+{
+  "name": "customerorderservice",
+  "version": "1.0.0",
+  "description": "Customer Order Service",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Dazza65/mystore-customerordersservice.git"
+  },
+  "author": "D Harris",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dazza65/mystore-customerordersservice/issues"
+  },
+  "homepage": "https://github.com/Dazza65/mystore-customerordersservice#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.0"
+  }
+}
