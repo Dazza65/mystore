@@ -50,6 +50,11 @@ app.get(`/${this_service}/`, function(req,res){
   })
 });
 
+app.get(`/${service}/status`, function(req,res){
+  console.log("Status check...");
+  res.send("{OK}"); 
+});
+
 app.listen(port, function (){
   console.log(`Service ${this_service} running on internal port: ${port}`);
 });
