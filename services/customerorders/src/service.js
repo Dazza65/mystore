@@ -3,8 +3,9 @@ const fetch = require('node-fetch');
 
 const app = express(); 
 const this_service = "customerorders"
-const customerservice = "customerservice"
-const orderservice = "orderservice"
+const customerservice = process.env.CUSTOMER_SVC || "customerservice"
+const orderservice = process.env.ORDER_SVC || "orderservice"
+
 const port = 8080;
 
 app.get(`/${this_service}/`, function(req,res){
@@ -50,11 +51,13 @@ app.get(`/${this_service}/`, function(req,res){
   })
 });
 
-app.get(`/${service}/status`, function(req,res){
+app.get(`/${this_service}/status`, function(req,res){
   console.log("Status check...");
   res.send("{OK}"); 
 });
 
 app.listen(port, function (){
   console.log(`Service ${this_service} running on internal port: ${port}`);
+  console.log(`Connecting to ${customerservice}`);
+  console.log(`Connecting to ${orderservice}`);
 });
