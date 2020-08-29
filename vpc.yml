@@ -26,7 +26,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
-  SubnetA:
+  PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
@@ -42,7 +42,7 @@ Resources:
             - ''
             - - !Ref AWS::StackName
               - '-subnet-public'
-  SubnetB:
+  PrivateSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
@@ -70,11 +70,12 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
       RouteTableId: !Ref PublicRouteTable
-  SubnetARouteTableAssociation:
+  PublicSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref SubnetA
+      SubnetId: !Ref PublicSubnet
+t
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -82,19 +83,52 @@ Resources:
       Tags:
       - Key: Name
         Value: PrivateRouteTbl
-  SubnetBRouteTableAssociation:
+  PrivateSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PrivateRouteTable
-      SubnetId: !Ref SubnetB
+      SubnetId: !Ref PrivateSubnet
+
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Ref AWS::StackName
+      GroupDescription: Allows traffic on port 8080 into the ECS container VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 0.0.0.0/0
+      Tags:
+      - Key: Name
+        Value: !Ref AWS::StackName
+
+  MyServiceDiscovery:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties: 
+      Description: Microservice discovery service
+      Name: AWS::StackName
+      Vpc: !Ref VPC
+  
+
 Outputs:
-  BuildVPC:
-    Description: VPC ID for the build server
+  VPC:
+    Description: VPC ID for the ECS service
     Value: !Ref VPC
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", BuildVpcID ] ]
+      Name: !Join [ ":", [ !Ref "AWS::StackName", VpcID ] ]
   PublicSubnetCIDR:
     Description: CIDR block of the public subnet
-    Value: !Ref SubnetA
+    Value: !Ref PublicSubnet
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", PublicSubnetCIDR ] ]
+  PrivateSubnetCIDR:
+    Description: CIDR block of the private subnet
+    Value: !Ref PrivateSubnet
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PrivateSubnetCIDR ] ]
+  SecurityGroupName:
+    Description: Security group name
+    Value: !Ref MySecurityGroup
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", SecurityGroupName ] ]
