@@ -26,6 +26,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
+  
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -75,7 +76,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet
-t
+
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -88,6 +89,29 @@ t
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties: 
+      AllocationId:
+        Fn::GetAtt:
+        - EIP
+        - AllocationId
+      SubnetId: !Ref PublicSubnet
+
+  EIP:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::EIP
+    Properties:
+        Domain: vpc
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+        RouteTableId:
+          Ref: PrivateRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: NatGateway
 
   MySecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -107,9 +131,16 @@ t
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties: 
       Description: Microservice discovery service
-      Name: AWS::StackName
+      Name: !Ref AWS::StackName
       Vpc: !Ref VPC
   
+  MyECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: MyStore
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
 
 Outputs:
   VPC:
@@ -121,14 +152,19 @@ Outputs:
     Description: CIDR block of the public subnet
     Value: !Ref PublicSubnet
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicSubnetCIDR ] ]
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicSubnet ] ]
   PrivateSubnetCIDR:
     Description: CIDR block of the private subnet
     Value: !Ref PrivateSubnet
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", PrivateSubnetCIDR ] ]
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PrivateSubnet ] ]
   SecurityGroupName:
     Description: Security group name
     Value: !Ref MySecurityGroup
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", SecurityGroupName ] ]
+  ECSClusterName:
+    Description: ECS Cluster name
+    Value: !Ref MyECSCluster
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", ECSClusterName ] ]

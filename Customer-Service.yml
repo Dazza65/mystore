@@ -1,0 +1,33 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+CustomerService:
+  Type: AWS::ECS::Service
+  Properties: 
+    Cluster: String
+    DeploymentConfiguration: 
+      DeploymentConfiguration
+    DeploymentController: 
+      DeploymentController
+    DesiredCount: Integer
+    EnableECSManagedTags: Boolean
+    HealthCheckGracePeriodSeconds: Integer
+    LaunchType: String
+    LoadBalancers: 
+      - LoadBalancer
+    NetworkConfiguration: 
+      NetworkConfiguration
+    PlacementConstraints: 
+      - PlacementConstraint
+    PlacementStrategies: 
+      - PlacementStrategy
+    PlatformVersion: String
+    PropagateTags: String
+    Role: String
+    SchedulingStrategy: String
+    ServiceName: String
+    ServiceRegistries: 
+      - ServiceRegistry
+    Tags: 
+      - Tag
+    TaskDefinition: String
