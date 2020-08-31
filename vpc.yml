@@ -126,6 +126,7 @@ Resources:
       Tags:
       - Key: Name
         Value: !Ref AWS::StackName
+      VpcId: !Ref VPC
 
   MyServiceDiscovery:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
@@ -168,3 +169,8 @@ Outputs:
     Value: !Ref MyECSCluster
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", ECSClusterName ] ]
+  MyServiceDiscovery:
+    Description: Service Discovery name
+    Value: !Ref MyServiceDiscovery
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", ServiceDiscoveryName ] ]
