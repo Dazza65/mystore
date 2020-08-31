@@ -1,33 +1,39 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 
-CustomerService:
-  Type: AWS::ECS::Service
-  Properties: 
-    Cluster: String
-    DeploymentConfiguration: 
-      DeploymentConfiguration
-    DeploymentController: 
-      DeploymentController
-    DesiredCount: Integer
-    EnableECSManagedTags: Boolean
-    HealthCheckGracePeriodSeconds: Integer
-    LaunchType: String
-    LoadBalancers: 
-      - LoadBalancer
-    NetworkConfiguration: 
-      NetworkConfiguration
-    PlacementConstraints: 
-      - PlacementConstraint
-    PlacementStrategies: 
-      - PlacementStrategy
-    PlatformVersion: String
-    PropagateTags: String
-    Role: String
-    SchedulingStrategy: String
-    ServiceName: String
-    ServiceRegistries: 
-      - ServiceRegistry
-    Tags: 
-      - Tag
-    TaskDefinition: String
+Resources:
+  DiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: Discovery Service for the customer service
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: customer-service
+      NamespaceId: ns-f43ewkxq33utw352
+
+  
+  MyCustomerService:
+    Type: AWS::ECS::Service
+    Properties: 
+      Cluster: MyStore
+      DesiredCount: 1
+      EnableECSManagedTags: true
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration: 
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - Fn::ImportValue:
+                !Join [':', ['mystore', 'SecurityGroupName']]
+          Subnets:
+            - Fn::ImportValue:
+                !Join [':', ['mystore', 'PrivateSubnet']]
+      ServiceName: customer-service
+      ServiceRegistries: 
+        - RegistryArn: !GetAtt DiscoveryService.Arn
+      TaskDefinition: mystore-customer-service-td
