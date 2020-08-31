@@ -1,8 +1,13 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 
+Parameters:
+  MyCluster:
+    Description: Cluster name for services
+    Type: String
+
 Resources:
-  DiscoveryService:
+  CustomerServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
     Properties: 
       Description: Discovery Service for the customer service
@@ -14,8 +19,8 @@ Resources:
       HealthCheckCustomConfig: 
         FailureThreshold: 1
       Name: customer-service
-      NamespaceId: ns-f43ewkxq33utw352
-
+      NamespaceId:
+          Fn::ImportValue: !Sub "${MyCluster}:ServiceDiscoveryName"
   
   MyCustomerService:
     Type: AWS::ECS::Service
@@ -28,12 +33,46 @@ Resources:
         AwsvpcConfiguration: 
           AssignPublicIp: DISABLED
           SecurityGroups:
-            - Fn::ImportValue:
-                !Join [':', ['mystore', 'SecurityGroupName']]
+            - Fn::ImportValue: !Sub "${MyCluster}:SecurityGroupName"
           Subnets:
-            - Fn::ImportValue:
-                !Join [':', ['mystore', 'PrivateSubnet']]
+            - Fn::ImportValue: !Sub "${MyCluster}:PrivateSubnet"
+      SchedulingStrategy: REPLICA
       ServiceName: customer-service
       ServiceRegistries: 
-        - RegistryArn: !GetAtt DiscoveryService.Arn
-      TaskDefinition: mystore-customer-service-td
+        - RegistryArn: !GetAtt CustomerServiceDiscoveryService.Arn
+      TaskDefinition: mystore-customer-service-td:1
+
+  OrderServiceDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: Discovery Service for the customer service
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: order-service
+      NamespaceId:
+          Fn::ImportValue: !Sub "${MyCluster}:ServiceDiscoveryName"
+  
+  MyOrderService:
+    Type: AWS::ECS::Service
+    Properties: 
+      Cluster: MyStore
+      DesiredCount: 1
+      EnableECSManagedTags: true
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration: 
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - Fn::ImportValue: !Sub "${MyCluster}:SecurityGroupName"
+          Subnets:
+            - Fn::ImportValue: !Sub "${MyCluster}:PrivateSubnet"
+      SchedulingStrategy: REPLICA
+      ServiceName: order-service
+      ServiceRegistries: 
+        - RegistryArn: !GetAtt OrderServiceDiscoveryService.Arn
+      TaskDefinition: mystore-order-service-td:1
