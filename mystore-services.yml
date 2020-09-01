@@ -2,8 +2,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  MyCluster:
-    Description: Cluster name for services
+  MyBase:
+    Description: Previously supplied stack name for base infrastructure
     Type: String
 
 Resources:
@@ -20,12 +20,12 @@ Resources:
         FailureThreshold: 1
       Name: customer-service
       NamespaceId:
-          Fn::ImportValue: !Sub "${MyCluster}:ServiceDiscoveryName"
+          Fn::ImportValue: !Sub "${MyBase}:ServiceDiscoveryName"
   
   MyCustomerService:
     Type: AWS::ECS::Service
     Properties: 
-      Cluster: MyStore
+      Cluster: !Ref MyBase
       DesiredCount: 1
       EnableECSManagedTags: true
       LaunchType: FARGATE
@@ -33,9 +33,9 @@ Resources:
         AwsvpcConfiguration: 
           AssignPublicIp: DISABLED
           SecurityGroups:
-            - Fn::ImportValue: !Sub "${MyCluster}:SecurityGroupName"
+            - Fn::ImportValue: !Sub "${MyBase}:SecurityGroupName"
           Subnets:
-            - Fn::ImportValue: !Sub "${MyCluster}:PrivateSubnet"
+            - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet"
       SchedulingStrategy: REPLICA
       ServiceName: customer-service
       ServiceRegistries: 
@@ -55,12 +55,12 @@ Resources:
         FailureThreshold: 1
       Name: order-service
       NamespaceId:
-          Fn::ImportValue: !Sub "${MyCluster}:ServiceDiscoveryName"
+          Fn::ImportValue: !Sub "${MyBase}:ServiceDiscoveryName"
   
   MyOrderService:
     Type: AWS::ECS::Service
     Properties: 
-      Cluster: MyStore
+      Cluster: !Ref MyBase
       DesiredCount: 1
       EnableECSManagedTags: true
       LaunchType: FARGATE
@@ -68,11 +68,30 @@ Resources:
         AwsvpcConfiguration: 
           AssignPublicIp: DISABLED
           SecurityGroups:
-            - Fn::ImportValue: !Sub "${MyCluster}:SecurityGroupName"
+            - Fn::ImportValue: !Sub "${MyBase}:SecurityGroupName"
           Subnets:
-            - Fn::ImportValue: !Sub "${MyCluster}:PrivateSubnet"
+            - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet"
       SchedulingStrategy: REPLICA
       ServiceName: order-service
       ServiceRegistries: 
         - RegistryArn: !GetAtt OrderServiceDiscoveryService.Arn
       TaskDefinition: mystore-order-service-td:1
+  
+  MyCustomerOrderService:
+    Type: AWS::ECS::Service
+    Properties: 
+      Cluster: !Ref MyBase
+      DesiredCount: 2
+      EnableECSManagedTags: true
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration: 
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue: !Sub "${MyBase}:SecurityGroupName"
+          Subnets:
+            - Fn::ImportValue: !Sub "${MyBase}:PublicSubnet1"
+            - Fn::ImportValue: !Sub "${MyBase}:PublicSubnet2"
+      SchedulingStrategy: REPLICA
+      ServiceName: customerorder-service
+      TaskDefinition: mystore-customerorder-service-td:4
