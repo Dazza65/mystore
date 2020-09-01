@@ -27,7 +27,7 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
   
-  PublicSubnet:
+  PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
@@ -42,8 +42,8 @@ Resources:
           Value: !Join 
             - ''
             - - !Ref AWS::StackName
-              - '-subnet-public'
-  PrivateSubnet:
+              - '-subnet-public1'
+  PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
@@ -52,6 +52,23 @@ Resources:
           Ref: 'AWS::Region'
       VpcId: !Ref VPC
       CidrBlock: !Select [1, !Cidr [ !Join [ '', [!Ref MyVpcCIDR, '/16']], 16, 12]]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - !Ref AWS::StackName
+              - '-subnet-public2'  
+    
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs 
+          Ref: 'AWS::Region'
+      VpcId: !Ref VPC
+      CidrBlock: !Select [8, !Cidr [ !Join [ '', [!Ref MyVpcCIDR, '/16']], 16, 12]]
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
@@ -71,11 +88,16 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
       RouteTableId: !Ref PublicRouteTable
-  PublicSubnetRouteTableAssociation:
+  PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet
+      SubnetId: !Ref PublicSubnet1
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -97,7 +119,7 @@ Resources:
         Fn::GetAtt:
         - EIP
         - AllocationId
-      SubnetId: !Ref PublicSubnet
+      SubnetId: !Ref PublicSubnet1
 
   EIP:
     DependsOn: VPCGatewayAttachment
@@ -138,7 +160,7 @@ Resources:
   MyECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: MyStore
+      ClusterName: !Ref AWS::StackName
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
@@ -149,11 +171,16 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", VpcID ] ]
-  PublicSubnetCIDR:
+  PublicSubnet1CIDR:
     Description: CIDR block of the public subnet
-    Value: !Ref PublicSubnet
+    Value: !Ref PublicSubnet1
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicSubnet ] ]
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicSubnet1 ] ]
+  PublicSubnet2CIDR:
+    Description: CIDR block of the public subnet
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PublicSubnet2 ] ]
   PrivateSubnetCIDR:
     Description: CIDR block of the private subnet
     Value: !Ref PrivateSubnet
