@@ -19,8 +19,16 @@ Resources:
       Tags:
       - Key: Name
         Value: !Ref AWS::StackName
+
+  IPv6CidrBlock:
+    Type: AWS::EC2::VPCCidrBlock
+    Properties:
+      VpcId: !Ref VPC
+      AmazonProvidedIpv6CidrBlock: true
+
   InternetGateway:
     Type: AWS::EC2::InternetGateway
+
   VPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -29,6 +37,8 @@ Resources:
   
   PublicSubnet1:
     Type: AWS::EC2::Subnet
+    DependsOn:
+      - IPv6CidrBlock
     Properties:
       AvailabilityZone: !Select
         - 0
@@ -36,6 +46,7 @@ Resources:
           Ref: 'AWS::Region'
       VpcId: !Ref VPC
       CidrBlock: !Select [0, !Cidr [ !Join [ '', [!Ref MyVpcCIDR, '/16']], 16, 12]]
+      Ipv6CidrBlock: !Select [ 1, !Cidr [ !Select [ 0, !GetAtt [ VPC, Ipv6CidrBlocks ]], 256, 64 ]]
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -45,6 +56,8 @@ Resources:
               - '-subnet-public1'
   PublicSubnet2:
     Type: AWS::EC2::Subnet
+    DependsOn:
+      - IPv6CidrBlock
     Properties:
       AvailabilityZone: !Select
         - 1
@@ -52,6 +65,7 @@ Resources:
           Ref: 'AWS::Region'
       VpcId: !Ref VPC
       CidrBlock: !Select [1, !Cidr [ !Join [ '', [!Ref MyVpcCIDR, '/16']], 16, 12]]
+      Ipv6CidrBlock: !Select [ 2, !Cidr [ !Select [0, !GetAtt [ VPC, Ipv6CidrBlocks ]], 256, 64 ]]
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -135,10 +149,10 @@ Resources:
         NatGatewayId:
           Ref: NatGateway
 
-  MySecurityGroup:
+  ECSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Ref AWS::StackName
+      GroupName: !Sub "${AWS::StackName}-ecs"
       GroupDescription: Allows traffic on port 8080 into the ECS container VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -147,8 +161,58 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
       - Key: Name
-        Value: !Ref AWS::StackName
+        Value: !Join [ ":", [ !Ref "AWS::StackName", ECSSecurityGroup ] ]
       VpcId: !Ref VPC
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${AWS::StackName}-alb"
+      GroupDescription: Allows traffic from the Internet via port 80
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+      Tags:
+      - Key: Name
+        Value: !Join [ ":", [ !Ref "AWS::StackName", ALBSecurityGroup ] ]
+      VpcId: !Ref VPC
+
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: dualstack
+      Name: !Sub "${AWS::StackName}-alb"
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      Tags:
+      - Key: Name
+        Value: !Sub "${AWS::StackName}-alb"
+      Type: application
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      Name: !Sub "${AWS::StackName}-tg"
+      TargetType: ip
+      Protocol: HTTP
+      Port: 8080
+      VpcId: !Ref VPC
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup    
+      LoadBalancerArn: !Ref ALB
+      Protocol: HTTP
+      Port: 8080
 
   MyServiceDiscovery:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
@@ -188,7 +252,7 @@ Outputs:
       Name: !Join [ ":", [ !Ref "AWS::StackName", PrivateSubnet ] ]
   SecurityGroupName:
     Description: Security group name
-    Value: !Ref MySecurityGroup
+    Value: !Ref ECSSecurityGroup
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", SecurityGroupName ] ]
   ECSClusterName:
@@ -201,3 +265,8 @@ Outputs:
     Value: !Ref MyServiceDiscovery
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", ServiceDiscoveryName ] ]
+  TargetGroupName:
+    Description: ALB Target Group name
+    Value: !Ref ALBTargetGroup
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", ALBTargetGroupName ] ]
