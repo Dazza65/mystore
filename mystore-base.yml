@@ -12,7 +12,7 @@ Parameters:
     Type: String
 
 Conditions:
-  CreateDNS: !Not [ !Equals ["", !Ref MyHostedDomain ]]
+  CreateDNS: !Not [ !Equals [ "", !Ref MyHostedDomain ]]
 
 Resources:
   VPC:
@@ -216,11 +216,12 @@ Resources:
 
   myDNS:
     Type: AWS::Route53::RecordSet
+    Condition: CreateDNS
     DependsOn: ALB
     Properties:
       Type: A
-      HostedZoneName: darrenharris.me.
-      Name: mystore.darrenharris.me.
+      HostedZoneName: !Sub "${MyHostedDomain}."
+      Name: !Sub "${AWS::StackName}.${MyHostedDomain}."
       AliasTarget:
           DNSName: !GetAtt 'ALB.DNSName'
           HostedZoneId: !GetAtt 'ALB.CanonicalHostedZoneID'
