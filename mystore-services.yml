@@ -95,3 +95,8 @@ Resources:
       SchedulingStrategy: REPLICA
       ServiceName: customerorder-service
       TaskDefinition: mystore-customerorder-service-td:4
+      LoadBalancers:
+      - TargetGroupArn: 
+          Fn::ImportValue: !Sub "${MyBase}:ALBTargetGroupName"
+        ContainerName: customerorder-service
+        ContainerPort: 8080
