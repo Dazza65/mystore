@@ -7,6 +7,12 @@ Parameters:
     ConstraintDescription: Must be an IP address in the form x.x.x.x
     Type: String
     Default: 10.45.0.0
+  MyHostedDomain:
+    Description: Name of hosted domain E.g. example.com
+    Type: String
+
+Conditions:
+  CreateDNS: !Not [ !Equals ["", !Ref MyHostedDomain ]]
 
 Resources:
   VPC:
