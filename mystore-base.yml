@@ -208,6 +208,17 @@ Resources:
       Protocol: HTTP
       Port: 80
 
+  myDNS:
+    Type: AWS::Route53::RecordSet
+    DependsOn: ALB
+    Properties:
+      Type: A
+      HostedZoneName: darrenharris.me.
+      Name: mystore.darrenharris.me.
+      AliasTarget:
+          DNSName: !GetAtt 'ALB.DNSName'
+          HostedZoneId: !GetAtt 'ALB.CanonicalHostedZoneID'
+
   MyServiceDiscovery:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties: 
@@ -259,3 +270,8 @@ Outputs:
     Value: !Ref MyServiceDiscovery
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", ServiceDiscoveryName ] ]
+  ALBListener:
+    Description: ALB listener
+    Value: !Ref ALBListener
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", ALBListener ] ]
