@@ -212,7 +212,7 @@ Resources:
           TargetGroupArn: !Ref ALBTargetGroup    
       LoadBalancerArn: !Ref ALB
       Protocol: HTTP
-      Port: 8080
+      Port: 80
 
   MyServiceDiscovery:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
