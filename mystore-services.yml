@@ -84,17 +84,24 @@ Resources:
       TargetType: ip
       Protocol: HTTP
       Port: 8080
-      VpcId: !Ref VPC
+      VpcId: 
+        Fn::ImportValue: !Sub "${MyBase}:VpcID"
       HealthCheckPath: /customerorders/status
 
   ALBListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
+      ListenerArn: 
+        Fn::ImportValue: !Sub "${MyBase}:ALBListener"
+      Conditions:
+      - Field: path-pattern
+        PathPatternConfig:
+          Values: 
+            - /customerorders/*
       Actions:
         - Type: forward
           TargetGroupArn: !Ref CustomerOrderTargetGroup
-      ListenerArn: 
-        - Fn::ImportValue: !Sub "{$MyBase}:ALBListener"
+      Priority: 1
 
   MyCustomerOrderService:
     Type: AWS::ECS::Service
@@ -115,7 +122,6 @@ Resources:
       ServiceName: customerorder-service
       TaskDefinition: mystore-customerorder-service-td:4
       LoadBalancers:
-      - TargetGroupArn: 
-          Fn::ImportValue: !Sub "${MyBase}:ALBTargetGroupName"
+      - TargetGroupArn: !Ref CustomerOrderTargetGroup
         ContainerName: customerorder-service
         ContainerPort: 8080
