@@ -103,6 +103,21 @@ Resources:
           TargetGroupArn: !Ref CustomerOrderTargetGroup
       Priority: 1
 
+  CustomerOrderServiceDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties: 
+      Description: Discovery Service for the public facing customer order service
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: customerorder-service
+      NamespaceId:
+          Fn::ImportValue: !Sub "${MyBase}:ServiceDiscoveryName"
+
   MyCustomerOrderService:
     Type: AWS::ECS::Service
     Properties: 
