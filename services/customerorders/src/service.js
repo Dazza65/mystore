@@ -3,8 +3,10 @@ const fetch = require('node-fetch');
 
 const app = express(); 
 const this_service = "customerorders"
-const customerservice = process.env.CUSTOMER_SVC || "customerservice"
-const orderservice = process.env.ORDER_SVC || "orderservice"
+const customerservice = process.env.CUSTOMER_SVC || "localhost"
+const customerserviceport = process.env.CUSTOMER_SVC_PORT || 9010
+const orderservice = process.env.ORDER_SVC || "localhost"
+const orderserviceport = process.env.ORDER_SVC_PORT || 9020
 
 const port = 8080;
 
@@ -14,7 +16,8 @@ app.get(`/${this_service}/`, function(req,res){
 
   if ( customerID ) {}
   console.log("Get orders for customer: " + customerID);
-  fetch(`http://${customerservice}:8080/customers/?id=${customerID}`)
+  
+  fetch(`http://${customerservice}:${customerserviceport}/customers/?id=${customerID}`)
   .then(response => {
     return response.json();
   })
@@ -25,7 +28,7 @@ app.get(`/${this_service}/`, function(req,res){
       customerName = data[0].name;
       console.log(`Customer name is: ${customerName}`);
 
-      fetch(`http://${orderservice}:8080/orders/?customerID=${customerID}`)
+      fetch(`http://${orderservice}:${orderserviceport}/orders/?customerID=${customerID}`)
       .then(response => {
         return response.json();
       })
@@ -47,7 +50,9 @@ app.get(`/${this_service}/`, function(req,res){
 
   })
   .catch((error) => {
-    console.log("ERROR: " + error);
+    let err = { "Error:" : "Failed to get customer orders." };
+    console.log(error.message);
+    res.status(503).send(JSON.stringify(err));
   })
 });
 
@@ -58,6 +63,6 @@ app.get(`/${this_service}/status`, function(req,res){
 
 app.listen(port, function (){
   console.log(`Service ${this_service} running on internal port: ${port}`);
-  console.log(`Connecting to ${customerservice}`);
-  console.log(`Connecting to ${orderservice}`);
+  console.log(`Connecting to ${customerservice}. External port: ${customerserviceport}`);
+  console.log(`Connecting to ${orderservice}.  External port: ${orderserviceport}`);
 });
