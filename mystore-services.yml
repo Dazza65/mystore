@@ -40,7 +40,7 @@ Resources:
       ServiceName: customer-service
       ServiceRegistries: 
         - RegistryArn: !GetAtt CustomerServiceDiscoveryService.Arn
-      TaskDefinition: mystore-customer-service-td:1
+      TaskDefinition: mystore-customer-service-td:3
 
   OrderServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
@@ -75,7 +75,7 @@ Resources:
       ServiceName: order-service
       ServiceRegistries: 
         - RegistryArn: !GetAtt OrderServiceDiscoveryService.Arn
-      TaskDefinition: mystore-order-service-td:1
+      TaskDefinition: mystore-order-service-td:4
   
   CustomerOrderTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -135,7 +135,7 @@ Resources:
             - Fn::ImportValue: !Sub "${MyBase}:PublicSubnet2"
       SchedulingStrategy: REPLICA
       ServiceName: customerorder-service
-      TaskDefinition: mystore-customerorder-service-td:4
+      TaskDefinition: mystore-customerorder-service-td:8
       LoadBalancers:
       - TargetGroupArn: !Ref CustomerOrderTargetGroup
         ContainerName: customerorder-service
