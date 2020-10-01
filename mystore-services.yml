@@ -7,6 +7,42 @@ Parameters:
     Type: String
 
 Resources:
+  CustomerServiceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub "${MyBase}:ECSExecutionRole"
+      Family: !Sub ${AWS::StackName}-customer-service
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "${MyBase}:ECSExecutionRole"
+      ContainerDefinitions:
+        - Name: customer-service
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/customerservice:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: http
+          Essential: true
+          LogConfiguration:
+              LogDriver: awslogs
+              Options:
+                awslogs-group: /ecs/mystore-customers
+                awslogs-region: ap-southeast-2
+                awslogs-stream-prefix: ecs
+                awslogs-create-group: true
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - curl -s http://localhost:8080/customers/status | grep -q OK
+            Interval: 60
+            Retries: 3
+            StartPeriod: 10
+            Timeout: 2
+
   CustomerServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
     Properties: 
@@ -24,6 +60,7 @@ Resources:
   
   MyCustomerService:
     Type: AWS::ECS::Service
+    DependsOn: CustomerServiceTaskDefinition
     Properties: 
       Cluster: !Ref MyBase
       DesiredCount: 1
@@ -40,7 +77,43 @@ Resources:
       ServiceName: customer-service
       ServiceRegistries: 
         - RegistryArn: !GetAtt CustomerServiceDiscoveryService.Arn
-      TaskDefinition: mystore-customer-service-td:1
+      TaskDefinition: !Ref CustomerServiceTaskDefinition
+
+  OrderServiceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub "${MyBase}:ECSExecutionRole"
+      Family: !Sub ${AWS::StackName}-order-service
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "${MyBase}:ECSExecutionRole"
+      ContainerDefinitions:
+        - Name: order-service
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/orderservice:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: http
+          Essential: true
+          LogConfiguration:
+              LogDriver: awslogs
+              Options:
+                awslogs-group: /ecs/mystore-orders
+                awslogs-region: ap-southeast-2
+                awslogs-stream-prefix: ecs
+                awslogs-create-group: true
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - curl -s http://localhost:8080/orders/status | grep -q OK
+            Interval: 60
+            Retries: 3
+            StartPeriod: 10
+            Timeout: 2
 
   OrderServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
@@ -59,6 +132,7 @@ Resources:
   
   MyOrderService:
     Type: AWS::ECS::Service
+    DependsOn: OrderServiceTaskDefinition
     Properties: 
       Cluster: !Ref MyBase
       DesiredCount: 1
@@ -75,7 +149,7 @@ Resources:
       ServiceName: order-service
       ServiceRegistries: 
         - RegistryArn: !GetAtt OrderServiceDiscoveryService.Arn
-      TaskDefinition: mystore-order-service-td:1
+      TaskDefinition: !Ref OrderServiceTaskDefinition
   
   CustomerOrderTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -103,6 +177,51 @@ Resources:
           TargetGroupArn: !Ref CustomerOrderTargetGroup
       Priority: 1
 
+  CustomerOrderServiceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub "${MyBase}:ECSExecutionRole"
+      Family: !Sub ${AWS::StackName}-customerorder-service
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "${MyBase}:ECSExecutionRole"
+      ContainerDefinitions:
+        - Name: customerorder-service
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/customerorderservice:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: http
+          Essential: true
+          Environment:
+            - Name: CUSTOMER_SVC
+              Value: customer-service.mystore
+            - Name: CUSTOMER_SVC_PORT
+              Value: 8080
+            - Name: ORDER_SVC
+              Value: order-service.mystore
+            - Name: ORDER_SVC_PORT
+              Value: 8080
+          LogConfiguration:
+              LogDriver: awslogs
+              Options:
+                awslogs-group: /ecs/mystore-customerorders
+                awslogs-region: ap-southeast-2
+                awslogs-stream-prefix: ecs
+                awslogs-create-group: true
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - curl -s http://localhost:8080/customerorders/status | grep -q OK
+            Interval: 60
+            Retries: 3
+            StartPeriod: 10
+            Timeout: 2
+
   CustomerOrderServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
     Properties: 
@@ -120,6 +239,7 @@ Resources:
 
   MyCustomerOrderService:
     Type: AWS::ECS::Service
+    DependsOn: CustomerOrderServiceTaskDefinition
     Properties: 
       Cluster: !Ref MyBase
       DesiredCount: 2
@@ -135,7 +255,7 @@ Resources:
             - Fn::ImportValue: !Sub "${MyBase}:PublicSubnet2"
       SchedulingStrategy: REPLICA
       ServiceName: customerorder-service
-      TaskDefinition: mystore-customerorder-service-td:4
+      TaskDefinition: !Ref CustomerOrderServiceTaskDefinition
       LoadBalancers:
       - TargetGroupArn: !Ref CustomerOrderTargetGroup
         ContainerName: customerorder-service
