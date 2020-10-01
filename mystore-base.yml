@@ -10,6 +10,7 @@ Parameters:
   MyHostedDomain:
     Description: Name of hosted domain E.g. example.com
     Type: String
+    Default: ''
 
 Conditions:
   CreateDNS: !Not [ !Equals [ "", !Ref MyHostedDomain ]]
@@ -230,8 +231,23 @@ Resources:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties: 
       Description: Microservice discovery service
-      Name: !Ref AWS::StackName
+      Name: mystore
       Vpc: !Ref VPC
+
+  ECSExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: mystore-ecs-execution-role
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
   
   MyECSCluster:
     Type: AWS::ECS::Cluster
@@ -282,3 +298,8 @@ Outputs:
     Value: !Ref ALBListener
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", ALBListener ] ]
+  ECSExecutionRoleArn:
+    Description: ECS execution role
+    Value: !GetAtt ECSExecutionRole.Arn
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", ECSExecutionRole ] ]
