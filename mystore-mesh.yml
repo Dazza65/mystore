@@ -1,0 +1,101 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  MystoreMesh:
+    Type: AWS::AppMesh::Mesh
+    Properties:
+      MeshName: mystore-mesh
+      Spec:
+        EgressFilter: 
+          Type: DROP_ALL
+  
+  OrderServiceVNode:
+    Type: AWS::AppMesh::VirtualNode
+    Properties:
+      VirtualNodeName: order-service-vnode
+      MeshName: !GetAtt MystoreMesh.MeshName
+      Spec: 
+        Listeners:
+          - PortMapping:
+              Port: 8080
+              Protocol: http
+        ServiceDiscovery:
+          DNS:
+            Hostname: order-service.mystore
+        Logging:
+          AccessLog:
+            File:
+              Path: /dev/stdout
+
+  CustomerServiceVNode:
+    Type: AWS::AppMesh::VirtualNode
+    Properties:
+      VirtualNodeName: customer-service-vnode
+      MeshName: !GetAtt MystoreMesh.MeshName
+      Spec: 
+        Listeners:
+          - PortMapping:
+              Port: 8080
+              Protocol: http
+        ServiceDiscovery:
+          DNS:
+            Hostname: customer-service.mystore
+        Logging:
+          AccessLog:
+            File:
+              Path: /dev/stdout
+ 
+  CustomerOrderServiceVNode:
+    Type: AWS::AppMesh::VirtualNode
+    Properties:
+      VirtualNodeName: customerorder-service-vnode
+      MeshName: !GetAtt MystoreMesh.MeshName
+      Spec: 
+        Listeners:
+          - PortMapping:
+              Port: 8080
+              Protocol: http
+        ServiceDiscovery:
+          DNS:
+            Hostname: customerorder-service.mystore
+        Logging:
+          AccessLog:
+            File:
+              Path: /dev/stdout 
+        Backends:
+          - VirtualService:
+              VirtualServiceName: customer-service.mystore
+          - VirtualService:
+              VirtualServiceName: order-service.mystore     
+
+  OrderServiceVService:
+    Type: AWS::AppMesh::VirtualService
+    Properties:
+      MeshName: !GetAtt MystoreMesh.MeshName
+      VirtualServiceName: order-service.mystore
+      Spec:   
+        Provider:
+          VirtualNode:
+            VirtualNodeName: !GetAtt OrderServiceVNode.VirtualNodeName   
+
+  CustomerServiceVService:
+    Type: AWS::AppMesh::VirtualService
+    Properties:
+      MeshName: !GetAtt MystoreMesh.MeshName
+      VirtualServiceName: customer-service.mystore
+      Spec:   
+        Provider:
+          VirtualNode:
+            VirtualNodeName: !GetAtt CustomerServiceVNode.VirtualNodeName   
+
+  CustomerOrderServiceVService:
+    Type: AWS::AppMesh::VirtualService
+    Properties:
+      MeshName: !GetAtt MystoreMesh.MeshName
+      VirtualServiceName: customerorder-service.mystore
+      Spec:   
+        Provider:
+          VirtualNode:
+            VirtualNodeName: !GetAtt CustomerOrderServiceVNode.VirtualNodeName   
+  
