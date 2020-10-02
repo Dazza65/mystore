@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "customerorderservice"
+		},
+		{
+			"path": "customerservice"
+		},
+		{
+			"path": "orderservice"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/*service/*": true
+		}
+	}
+}

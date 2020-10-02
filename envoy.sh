@@ -31,7 +31,7 @@ do
                     "value": "1"
                 }
                 ],
-                "image": ($ENVOY_REGISTRY + "/aws-appmesh-envoy:v1.11.2.0-prod"),
+                "image": ($ENVOY_REGISTRY + "/aws-appmesh-envoy:v1.12.5.0-prod"),
                 "logConfiguration": {
                     "logDriver": "awslogs",
                     "options": {
