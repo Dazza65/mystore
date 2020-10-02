@@ -2,3 +2,4 @@ customerservice/
 orderservice/
 customerorderservice/
 *.log
+.DS_Store
