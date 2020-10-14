@@ -44,21 +44,24 @@ app.get(`/${this_service}/`, function(req,res){
         });
         res.send(orderList); 
       })
+      .catch((error) => {
+        let err = { "Error:" : "Failed to get customer orders." };
+        console.log(error.message);
+        res.status(503).send(JSON.stringify(err));
+      })
     } else {
       res.send(orderList);
     }
-
   })
   .catch((error) => {
-    let err = { "Error:" : "Failed to get customer orders." };
+    let err = { "Error:" : "Failed to get customer." };
     console.log(error.message);
     res.status(503).send(JSON.stringify(err));
   })
 });
 
 app.get(`/${this_service}/status`, function(req,res){
-  console.log("Status check...");
-  res.send("{OK}"); 
+  res.send("{\"Status\": \"OK\"}"); 
 });
 
 app.listen(port, function (){
