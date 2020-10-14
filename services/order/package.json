@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/Dazza65/mystore-orderservice#readme",
   "dependencies": {
+    "aws-param-store": "^3.2.0",
+    "aws-sdk": "^2.771.0",
     "express": "^4.17.1"
   }
 }
