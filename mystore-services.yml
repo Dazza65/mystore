@@ -30,9 +30,9 @@ Resources:
           LogConfiguration:
               LogDriver: awslogs
               Options:
-                awslogs-group: /ecs/mystore-customers
+                awslogs-group: /ecs/mystore-services
                 awslogs-region: ap-southeast-2
-                awslogs-stream-prefix: ecs
+                awslogs-stream-prefix: customer-
                 awslogs-create-group: true
           HealthCheck:
             Command:
@@ -81,6 +81,7 @@ Resources:
 
   OrderServiceTaskDefinition:
     Type: AWS::ECS::TaskDefinition
+    DependsOn: CustomerServiceTaskDefinition
     Properties:
       Cpu: 256
       ExecutionRoleArn:
@@ -102,10 +103,9 @@ Resources:
           LogConfiguration:
               LogDriver: awslogs
               Options:
-                awslogs-group: /ecs/mystore-orders
+                awslogs-group: /ecs/mystore-services
                 awslogs-region: ap-southeast-2
-                awslogs-stream-prefix: ecs
-                awslogs-create-group: true
+                awslogs-stream-prefix: order-
           HealthCheck:
             Command:
               - CMD-SHELL
@@ -179,6 +179,7 @@ Resources:
 
   CustomerOrderServiceTaskDefinition:
     Type: AWS::ECS::TaskDefinition
+    DependsOn: CustomerServiceTaskDefinition
     Properties:
       Cpu: 256
       ExecutionRoleArn:
@@ -209,10 +210,9 @@ Resources:
           LogConfiguration:
               LogDriver: awslogs
               Options:
-                awslogs-group: /ecs/mystore-customerorders
+                awslogs-group: /ecs/mystore-services
                 awslogs-region: ap-southeast-2
-                awslogs-stream-prefix: ecs
-                awslogs-create-group: true
+                awslogs-stream-prefix: customerorder-
           HealthCheck:
             Command:
               - CMD-SHELL
