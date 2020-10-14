@@ -4,9 +4,9 @@ const fetch = require('node-fetch');
 const app = express(); 
 const this_service = "customerorders"
 const customerservice = process.env.CUSTOMER_SVC || "localhost"
-const customerserviceport = process.env.CUSTOMER_SVC_PORT || 9010
+const customerserviceport = process.env.CUSTOMER_SVC_PORT || 8080
 const orderservice = process.env.ORDER_SVC || "localhost"
-const orderserviceport = process.env.ORDER_SVC_PORT || 9020
+const orderserviceport = process.env.ORDER_SVC_PORT || 8080
 
 const port = 8080;
 
@@ -56,7 +56,10 @@ app.get(`/${this_service}/`, function(req,res){
   .catch((error) => {
     let err = { "Error:" : "Failed to get customer." };
     console.log(error.message);
-    res.status(503).send(JSON.stringify(err));
+    res.status(503).send({
+      status: 503,
+      error: 'Failed to get customer details'
+    });
   })
 });
 
