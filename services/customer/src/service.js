@@ -23,8 +23,7 @@ app.get("/customers/", function(req,res){
 });
 
 app.get(`/${service}/status`, function(req,res){
-  console.log("Status check...");
-  res.send("{OK}"); 
+  res.send("{\"Status\": \"OK\"}");
 });
 
 app.listen(port, function (){
