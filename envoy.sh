@@ -12,7 +12,7 @@ region=`aws configure get --profile ${profile} region`
 # Define variables #
 ENVOY_REGISTRY="840364872350.dkr.ecr.${region}.amazonaws.com";
 
-for TASK_DEF_ARN in arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-order-service:13 arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-customer-service:13 arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-customerorder-service:13
+for TASK_DEF_ARN in arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-order-service:31 arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-customer-service:31 arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-customerorder-service:31
 do
     TASK_DEF_VNODE=$(echo ${TASK_DEF_ARN} | cut -f6 -d: | cut -f4,5 -d-)
     TASK_DEF_OLD=$(aws ecs describe-task-definition --task-definition $TASK_DEF_ARN --profile ${profile});
@@ -21,6 +21,7 @@ do
     | jq --arg ENVOY_REGISTRY $ENVOY_REGISTRY --arg TASK_DEF_VNODE $TASK_DEF_VNODE --arg AWS_REGION $region ' .containerDefinitions += 
             [
             {
+                "image": ($ENVOY_REGISTRY + "/aws-appmesh-envoy:v1.12.5.0-prod"),
                 "environment": [
                 {
                     "name": "APPMESH_VIRTUAL_NODE_NAME",
@@ -29,16 +30,22 @@ do
                 {
                     "name": "ENABLE_ENVOY_XRAY_TRACING",
                     "value": "1"
+                },
+                {
+                    "name": "ENABLE_ENVOY_STATS_TAGS",
+                    "value": "1"
+                },
+                {
+                    "name": "ENABLE_ENVOY_DOG_STATSD",
+                    "value": "1"
                 }
                 ],
-                "image": ($ENVOY_REGISTRY + "/aws-appmesh-envoy:v1.12.5.0-prod"),
                 "logConfiguration": {
                     "logDriver": "awslogs",
                     "options": {
-                        "awslogs-create-group": "true",
                         "awslogs-region": $AWS_REGION,
-                        "awslogs-group": "mystore-appmesh-envoy",
-                        "awslogs-stream-prefix": "fargate"
+                        "awslogs-group": "/ecs/mystore-services",
+                        "awslogs-stream-prefix": "envoy"
                     }
                 },
                 "healthCheck": {
@@ -79,10 +86,28 @@ do
                 "logConfiguration": {
                     "logDriver": "awslogs",
                     "options": {
-                        "awslogs-create-group": "true",
                         "awslogs-region": $AWS_REGION,
-                        "awslogs-group": "mystore-appmesh-xray",
+                        "awslogs-group": "/ecs/mystore-services",
                         "awslogs-stream-prefix": "xray"
+                    }
+                }
+            },
+            {
+                "name": "cloudwatch-agent",
+                "image": "amazon/cloudwatch-agent:latest",
+                "secrets": [
+                    {
+                        "name": "CW_CONFIG_CONTENT",
+                        "valueFrom": "/mystore/cw-agent-log-format"
+                    }
+                ],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                    "awslogs-create-group": "True",
+                    "awslogs-group": "/ecs/ecs-cwagent-fargate",
+                    "awslogs-region": "ap-southeast-2",
+                    "awslogs-stream-prefix": "ecs"
                     }
                 }
             }
