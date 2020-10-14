@@ -11,6 +11,10 @@ Parameters:
     Description: Name of hosted domain E.g. example.com
     Type: String
     Default: ''
+  TechnicalContact:
+    Description: Owner of the created resources used in the tagging
+    Type: String
+    Default: Darren Harris
 
 Conditions:
   CreateDNS: !Not [ !Equals [ "", !Ref MyHostedDomain ]]
@@ -26,6 +30,8 @@ Resources:
       Tags:
       - Key: Name
         Value: !Ref AWS::StackName
+      - Key: TechnicalContact
+        Value: !Ref TechnicalContact
 
   IPv6CidrBlock:
     Type: AWS::EC2::VPCCidrBlock
@@ -61,6 +67,7 @@ Resources:
             - ''
             - - !Ref AWS::StackName
               - '-subnet-public1'
+
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     DependsOn:
@@ -102,6 +109,10 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Sub "${AWS::StackName}-pub-tbl"
+
   InternetRoute:
     Type: AWS::EC2::Route
     DependsOn: VPCGatewayAttachment
@@ -109,11 +120,13 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
       RouteTableId: !Ref PublicRouteTable
+
   PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet1
+
   PublicSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -126,7 +139,8 @@ Resources:
       VpcId: !Ref VPC
       Tags:
       - Key: Name
-        Value: PrivateRouteTbl
+        Value: !Sub "${AWS::StackName}-pvt-tbl"
+
   PrivateSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -147,6 +161,7 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
         Domain: vpc
+
   Route:
     Type: AWS::EC2::Route
     Properties:
@@ -248,7 +263,48 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
         - arn:aws:iam::aws:policy/CloudWatchFullAccess
         - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
   
+  SSMParameterDBFailure:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /mystore/simulate-db-failure
+      Type: String
+      Value: False
+      Description: "Simulates a DB failure in the backend services"
+      Tags:
+        TechnicalContact: !Ref TechnicalContact
+
+  SSMParameterDBSlow:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /mystore/simulate-db-performance
+      Type: String
+      Value: False
+      Description: "Simulates a slow DB request in the backend services"
+      Tags:
+        TechnicalContact: !Ref TechnicalContact
+
+  SSMParameterCWLogFmt:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /mystore/cw-agent-log-format
+      Type: String
+      Value: | 
+        {
+          "logs": 
+            { "metrics_collected": 
+              { "emf": {} }
+            }, 
+          "metrics":
+            { "metrics_collected":
+              { "statsd": {} }
+            }
+        }
+      Description: "Simulates a DB failure in the backend services"
+      Tags:
+        TechnicalContact: !Ref TechnicalContact
+
   MyECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
