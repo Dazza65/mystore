@@ -33,12 +33,30 @@ services:
     # Here we reference the application container that we are testing
     # You can test multiple containers at a time, simply duplicate this section
     # and customize it for each container, and give it a unique IP in 'credentials_network'.
-    orderservice:
+    customerorderservice:
         depends_on:
             - ecs-local-endpoints
         networks:
             credentials_network:
                 ipv4_address: "169.254.170.3"
+        environment:
+          AWS_DEFAULT_REGION: "ap-southeast-2"
+          AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
+    customerservice:
+        depends_on:
+            - ecs-local-endpoints
+        networks:
+            credentials_network:
+                ipv4_address: "169.254.170.4"
+        environment:
+          AWS_DEFAULT_REGION: "ap-southeast-2"
+          AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
+    orderservice:
+        depends_on:
+            - ecs-local-endpoints
+        networks:
+            credentials_network:
+                ipv4_address: "169.254.170.5"
         environment:
           AWS_DEFAULT_REGION: "ap-southeast-2"
           AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
