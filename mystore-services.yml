@@ -63,7 +63,7 @@ Resources:
     DependsOn: CustomerServiceTaskDefinition
     Properties: 
       Cluster: !Ref MyBase
-      DesiredCount: 1
+      DesiredCount: 2
       EnableECSManagedTags: true
       LaunchType: FARGATE
       NetworkConfiguration: 
@@ -72,7 +72,8 @@ Resources:
           SecurityGroups:
             - Fn::ImportValue: !Sub "${MyBase}:SecurityGroupName"
           Subnets:
-            - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet"
+            - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet1"
+            - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet2"
       SchedulingStrategy: REPLICA
       ServiceName: customer-service
       ServiceRegistries: 
@@ -135,7 +136,7 @@ Resources:
     DependsOn: OrderServiceTaskDefinition
     Properties: 
       Cluster: !Ref MyBase
-      DesiredCount: 1
+      DesiredCount: 2
       EnableECSManagedTags: true
       LaunchType: FARGATE
       NetworkConfiguration: 
@@ -144,7 +145,8 @@ Resources:
           SecurityGroups:
             - Fn::ImportValue: !Sub "${MyBase}:SecurityGroupName"
           Subnets:
-            - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet"
+            - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet1"
+            - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet2"
       SchedulingStrategy: REPLICA
       ServiceName: order-service
       ServiceRegistries: 
