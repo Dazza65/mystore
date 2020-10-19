@@ -5,7 +5,10 @@ const port = 8080;
 
 const customers = [
   { id: 1, name: "Darren Harris" },
-  { id: 2, name: "James Bromberger" }
+  { id: 2, name: "Joe Black" },
+  { id: 3, name: "Sid Vicious" },
+  { id: 4, name: "Penelope Pitstop" },
+  { id: 5, name: "Robin Hood" },
 ];
 
 app.get("/customers/", function(req,res){
