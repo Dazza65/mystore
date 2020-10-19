@@ -19,7 +19,12 @@ app.get(`/${this_service}/`, function(req,res){
   
   fetch(`http://${customerservice}:${customerserviceport}/customers/?id=${customerID}`)
   .then(response => {
-    return response.json();
+    if (response.ok) {
+      return response.json();
+    }
+    else {
+      throw new Error(res.statusText);
+    }
   })
   .then(data => {
     console.log("Returned data from customer service is: " + JSON.stringify(data));
@@ -30,12 +35,15 @@ app.get(`/${this_service}/`, function(req,res){
 
       fetch(`http://${orderservice}:${orderserviceport}/orders/?customerID=${customerID}`)
       .then(response => {
-        return response.json();
+        if (response.ok) {
+          return response.json();
+        }
+        else {
+          throw new Error(res.statusText);
+        }
       })
       .then(data => {
         console.log("Returned data from orderservice: " + JSON.stringify(data));
-
-        console.log(`CUSTNAME: ${customerName}`);
 
         data.forEach(order => {
           let customerOrder = order;
@@ -69,6 +77,6 @@ app.get(`/${this_service}/status`, function(req,res){
 
 app.listen(port, function (){
   console.log(`Service ${this_service} running on internal port: ${port}`);
-  console.log(`Connecting to ${customerservice}. External port: ${customerserviceport}`);
-  console.log(`Connecting to ${orderservice}.  External port: ${orderserviceport}`);
+  console.log(`Connecting to ${customerservice} on port: ${customerserviceport}`);
+  console.log(`Connecting to ${orderservice} on port: ${orderserviceport}`);
 });
