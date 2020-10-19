@@ -88,11 +88,11 @@ Resources:
             - - !Ref AWS::StackName
               - '-subnet-public2'  
     
-  PrivateSubnet:
+  PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
-        - 1
+        - 0
         - !GetAZs 
           Ref: 'AWS::Region'
       VpcId: !Ref VPC
@@ -103,7 +103,24 @@ Resources:
           Value: !Join 
             - ''
             - - !Ref AWS::StackName
-              - '-subnet-private'
+              - '-subnet-private1'
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs 
+          Ref: 'AWS::Region'
+      VpcId: !Ref VPC
+      CidrBlock: !Select [9, !Cidr [ !Join [ '', [!Ref MyVpcCIDR, '/16']], 16, 12]]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - !Ref AWS::StackName
+              - '-subnet-private2'
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -141,11 +158,17 @@ Resources:
       - Key: Name
         Value: !Sub "${AWS::StackName}-pvt-tbl"
 
-  PrivateSubnetRouteTableAssociation:
+  PrivateSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PrivateRouteTable
-      SubnetId: !Ref PrivateSubnet
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
 
   NatGateway:
     Type: AWS::EC2::NatGateway
@@ -270,8 +293,8 @@ Resources:
     Properties:
       Name: /mystore/simulate-db-failure
       Type: String
-      Value: False
-      Description: "Simulates a DB failure in the backend services"
+      Value: 30
+      Description: "Specifies the percentage that a DB failure is simulated in the backend services"
       Tags:
         TechnicalContact: !Ref TechnicalContact
 
@@ -329,11 +352,16 @@ Outputs:
     Value: !Ref PublicSubnet2
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", PublicSubnet2 ] ]
-  PrivateSubnetCIDR:
+  PrivateSubnet1CIDR:
     Description: CIDR block of the private subnet
-    Value: !Ref PrivateSubnet
+    Value: !Ref PrivateSubnet1
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", PrivateSubnet ] ]
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PrivateSubnet1 ] ]
+  PrivateSubnet2CIDR:
+    Description: CIDR block of the private subnet
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", PrivateSubnet2 ] ]  
   SecurityGroupName:
     Description: Security group name
     Value: !Ref ECSSecurityGroup
