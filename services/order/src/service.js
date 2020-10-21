@@ -35,16 +35,14 @@ function getOrders(customerID) {
 }
 
 app.get(`/${service}/`, function(req,res){
-  console.log("Get customer with ID: " + req.query.customerID);
+  console.log("Get orders for customer ID: " + req.query.customerID);
 
   awsParamStore.getParameter( '/mystore/simulate-db-failure', { region: 'ap-southeast-2' } )
     .then( (simulateDBFailure) => {
 
-      let failRate = Math.floor(100 / parseInt(simulateDBFailure.Value));
+      let failRate = parseInt(simulateDBFailure.Value);
 
-      console.log(`Fail rate: ${simulateDBFailure.Value}%`);
-
-      if ( (Math.floor(Math.random() * failRate) + 1) == 1 ) {
+      if ( failRate > 0 && (Math.floor(Math.random() * (Math.floor(100 / failRate))) + 1) == 1 ) {
         res.status(503).send(JSON.stringify({ "Error:" : "Failed to get customer orders. Simulated DB failure." }));
     } else {
       res.send(getOrders(parseInt(req.query.customerID)));   
