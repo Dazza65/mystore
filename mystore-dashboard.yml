@@ -1,0 +1,61 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  MyStoreDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties: 
+      DashboardName: MyStore
+      DashboardBody: |
+        {"widgets":
+          [ {"type":"metric",
+              "x":0,
+              "y":0,
+              "width":9,
+              "height":6,
+              "properties":{
+                "view":"timeSeries",
+                "stacked":false,
+                "metrics":[
+                  ["CWAgent","envoy_http_downstream_rq_xx","appmesh.mesh","mystore-mesh","metric_type","counter","envoy.http_conn_manager_prefix","ingress","appmesh.virtual_node","order-service-vnode","envoy.response_code_class","2"],
+                  ["...","5"],
+                  ["...","customer-service-vnode",".","2"],
+                  ["...","5"],
+                  ["...","customerorder-service-vnode",".","2"],
+                  ["...","5"]
+                ],
+                "region":"ap-southeast-2",
+                "title":"Number of Requests",
+                "period":300}
+            },
+            {"type":"metric",
+              "x":9,
+              "y":0,
+              "width":9,
+              "height":6,
+              "properties":{
+                "view":"timeSeries",
+                "stacked":false,
+                "metrics":[
+                  ["CWAgent","envoy_http_downstream_rq_time","appmesh.mesh","mystore-mesh","metric_type","timing","envoy.http_conn_manager_prefix","ingress","appmesh.virtual_node","order-service-vnode"],
+                  ["...","customer-service-vnode"],
+                  ["...","customerorder-service-vnode"]
+                ],
+              "region":"ap-southeast-2",
+              "title":"Request Time",
+              "period":300}
+            },
+            {"type":"metric",
+              "x":0,
+              "y":6,
+              "width":9,
+              "height":6,
+              "properties":{"view":"timeSeries","stacked":false,"metrics":[["ECS/ContainerInsights","CpuUtilized","TaskDefinitionFamily","mystore-services-order-service","ClusterName","MyStore"],["...","mystore-services-customer-service",".","."],["...","mystore-services-customerorder-service",".","."]],
+              "region":"ap-southeast-2",
+              "title":"Services CPU"}
+            }
+          ]
+        }
+
+
+
