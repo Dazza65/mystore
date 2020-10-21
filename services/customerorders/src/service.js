@@ -54,7 +54,7 @@ app.get(`/${this_service}/`, function(req,res){
       })
       .catch((error) => {
         let err = { "Error:" : "Failed to get customer orders." };
-        console.log(error.message);
+        console.log("Failed to get customer orders.");
         res.status(503).send(JSON.stringify(err));
       })
     } else {
