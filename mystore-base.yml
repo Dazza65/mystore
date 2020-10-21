@@ -293,7 +293,7 @@ Resources:
     Properties:
       Name: /mystore/simulate-db-failure
       Type: String
-      Value: 30
+      Value: 0
       Description: "Specifies the percentage that a DB failure is simulated in the backend services"
       Tags:
         TechnicalContact: !Ref TechnicalContact
@@ -331,7 +331,7 @@ Resources:
   MyECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Ref AWS::StackName
+      ClusterName: MyStore
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
