@@ -8,11 +8,12 @@ done
 profile=${profile:-default}
 
 region=`aws configure get --profile ${profile} region`
+account=`aws sts --profile ${profile} get-caller-identity | jq --raw-output .Account`
 
 # Define variables #
 ENVOY_REGISTRY="840364872350.dkr.ecr.${region}.amazonaws.com";
 
-for TASK_DEF_ARN in arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-order-service:31 arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-customer-service:31 arn:aws:ecs:ap-southeast-2:638876378760:task-definition/mystore-services-customerorder-service:31
+for TASK_DEF_ARN in arn:aws:ecs:ap-southeast-2:${account}:task-definition/mystore-services-order-service:8 arn:aws:ecs:ap-southeast-2:${account}:task-definition/mystore-services-customer-service:8 arn:aws:ecs:ap-southeast-2:${account}:task-definition/mystore-services-customerorder-service:8
 do
     TASK_DEF_VNODE=$(echo ${TASK_DEF_ARN} | cut -f6 -d: | cut -f4,5 -d-)
     TASK_DEF_OLD=$(aws ecs describe-task-definition --task-definition $TASK_DEF_ARN --profile ${profile});
