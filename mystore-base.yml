@@ -260,7 +260,7 @@ Resources:
     Properties:
       Type: A
       HostedZoneName: !Sub "${MyHostedDomain}."
-      Name: !Sub "${AWS::StackName}.${MyHostedDomain}."
+      Name: !Sub "mystore.${MyHostedDomain}."
       AliasTarget:
           DNSName: !GetAtt 'ALB.DNSName'
           HostedZoneId: !GetAtt 'ALB.CanonicalHostedZoneID'
