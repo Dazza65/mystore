@@ -1,7 +1,17 @@
 const express  = require("express");
 const app = express(); 
+const winston = require('winston');
 const service = "customers"
 const port = 8080;
+
+const logConfiguration = {
+  transports: [
+    new winston.transports.Console()
+  ],
+  format: winston.format.json()
+};
+
+const logger = winston.createLogger(logConfiguration);
 
 const customers = [
   { id: 1, name: "Darren Harris" },
@@ -12,7 +22,10 @@ const customers = [
 ];
 
 app.get("/customers/", function(req,res){
-  console.log("Get customer: " + req.query.id);
+  logger.info({
+    message: "Get customer",
+    params: [req.query.id]
+  });
 
   let customerArray = [...customers]; 
 
@@ -30,5 +43,9 @@ app.get(`/${service}/status`, function(req,res){
 });
 
 app.listen(port, function (){
-  console.log(`Service ${service} running on port: ${port}`);
+  logger.info({
+    message: 'Service running',
+    service: service,
+    port: port
+  });
 });

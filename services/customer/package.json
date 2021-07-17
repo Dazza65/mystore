@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/Dazza65/mystore-customerservice#readme",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "winston": "^3.3.3"
   }
 }
