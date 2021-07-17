@@ -1,6 +1,6 @@
 rm -f stop.log
 
-CLUSTER="mystore"
+CLUSTER="MyStore"
 SERVICES="order-service customer-service customerorder-service"
 
 for service in ${SERVICES}
