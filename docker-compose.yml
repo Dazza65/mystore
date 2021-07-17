@@ -1,7 +1,7 @@
 version: '2.0'
 services:
   customerorderservice:
-    image: customerorderservice:1.0.0
+    image: customerorderservice:1.0.1
     build: ./customerorderservice
     ports:
       - "9000:8080"
@@ -9,12 +9,12 @@ services:
       - CUSTOMER_SVC=customerservice
       - ORDER_SVC=orderservice
   orderservice:
-    image: orderservice:1.0.0
+    image: orderservice:1.0.1
     build: ./orderservice
     ports:
       - "9010:8080"
   customerservice:
-    image: customerservice:1.0.0
+    image: customerservice:1.0.1
     build: ./customerservice
     ports:
       - "9020:8080"
