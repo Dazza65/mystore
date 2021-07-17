@@ -1,0 +1,55 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  MyBase:
+    Description: Previously supplied stack name for base infrastructure
+    Type: String
+
+Resources:
+  MyStoreES:
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      AccessPolicies:
+        { "Version":  "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*"
+              },
+              "Action": "es:*",
+              "Resource": !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/mystore/*"
+            }
+          ]
+        }
+      AdvancedSecurityOptions:
+        Enabled: false
+      DomainName: mystore
+      DomainEndpointOptions:
+        EnforceHTTPS: true
+      EBSOptions:
+        EBSEnabled: true
+        VolumeSize: 10
+        VolumeType: gp2
+      ElasticsearchClusterConfig:
+        InstanceCount: 1
+        InstanceType: t3.small.elasticsearch
+      ElasticsearchVersion: "7.1"
+      NodeToNodeEncryptionOptions:
+        Enabled: true
+      EncryptionAtRestOptions:
+        Enabled: true
+        KmsKeyId: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/344a9709-eb1e-484a-88c7-1261311f09d7
+      VPCOptions:
+        SecurityGroupIds:
+          - Fn::ImportValue: !Sub "${MyBase}:SecurityGroupName"
+        SubnetIds:
+          - Fn::ImportValue: !Sub "${MyBase}:PrivateSubnet1"
+
+Outputs:
+  ESDomainEndpoint:
+    Description: ElasticSearch Endpoint
+    Value: !GetAtt MyStoreES.DomainEndpoint
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", ESDomainEndpoint ] ]
