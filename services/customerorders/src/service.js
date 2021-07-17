@@ -1,5 +1,6 @@
 const express  = require("express");
 const fetch = require('node-fetch');
+const winston = require('winston');
 
 const app = express(); 
 const this_service = "customerorders"
@@ -10,12 +11,27 @@ const orderserviceport = process.env.ORDER_SVC_PORT || 8080
 
 const port = 8080;
 
+const logConfiguration = {
+  transports: [
+    new winston.transports.Console()
+  ],
+  format: winston.format.json()
+};
+
+const logger = winston.createLogger(logConfiguration);
+
 app.get(`/${this_service}/`, function(req,res){
   const customerID = req.query.customerID;
   let customerName = '';
 
-  if ( customerID ) {}
-  console.log("Get orders for customer: " + customerID);
+  if ( customerID ) {
+    // TODO: Get orders for the specified ID or return all
+  }
+
+  logger.info({
+    message: "Get orders for customer",
+    params: [customerID]
+  });
   
   fetch(`http://${customerservice}:${customerserviceport}/customers/?id=${customerID}`)
   .then(response => {
@@ -27,11 +43,17 @@ app.get(`/${this_service}/`, function(req,res){
     }
   })
   .then(data => {
-    console.log("Returned data from customer service is: " + JSON.stringify(data));
+    logger.info({
+      message: "Returned data from customer service",
+      data: JSON.stringify(data)
+    });
+
     let orderList = [];
     if ( data.length > 0 ) {
       customerName = data[0].name;
-      console.log(`Customer name is: ${customerName}`);
+      logger.info({
+        message: `Customer name is: ${customerName}`
+      });
 
       fetch(`http://${orderservice}:${orderserviceport}/orders/?customerID=${customerID}`)
       .then(response => {
@@ -43,7 +65,10 @@ app.get(`/${this_service}/`, function(req,res){
         }
       })
       .then(data => {
-        console.log("Returned data from orderservice: " + JSON.stringify(data));
+        logger.info({
+          message: "Returned data from order service",
+          data: JSON.stringify(data)
+        });
 
         data.forEach(order => {
           let customerOrder = order;
@@ -54,7 +79,9 @@ app.get(`/${this_service}/`, function(req,res){
       })
       .catch((error) => {
         let err = { "Error:" : "Failed to get customer orders." };
-        console.log("Failed to get customer orders.");
+        logger.error({
+          error: "Failed to get customer orders."
+        });
         res.status(503).send(JSON.stringify(err));
       })
     } else {
@@ -63,7 +90,9 @@ app.get(`/${this_service}/`, function(req,res){
   })
   .catch((error) => {
     let err = { "Error:" : "Failed to get customer." };
-    console.log(error.message);
+    logger.error({
+      error: error.message
+    });
     res.status(503).send({
       status: 503,
       error: 'Failed to get customer details'
@@ -76,7 +105,16 @@ app.get(`/${this_service}/status`, function(req,res){
 });
 
 app.listen(port, function (){
-  console.log(`Service ${this_service} running on internal port: ${port}`);
-  console.log(`Connecting to ${customerservice} on port: ${customerserviceport}`);
-  console.log(`Connecting to ${orderservice} on port: ${orderserviceport}`);
+  logger.info({
+    message: 'Customer Order Service running',
+    params: [this_service, port]
+  });
+  logger.info({
+    message: `Connecting to ${customerservice}`,
+    params: [customerservice, customerserviceport]
+  });
+  logger.info({
+    message: `Connecting to ${orderservice}`,
+    params: [orderservice, orderserviceport]
+  });
 });
