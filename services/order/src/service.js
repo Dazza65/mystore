@@ -1,8 +1,18 @@
 const express  = require("express");
+const winston = require('winston');
 const awsParamStore = require( 'aws-param-store' );
 const app = express(); 
 const service = "orders"
 const port = 8080;
+
+const logConfiguration = {
+  transports: [
+    new winston.transports.Console()
+  ],
+  format: winston.format.json()
+};
+
+const logger = winston.createLogger(logConfiguration);
 
 const orders = [
   { id: 1, customerId: 1, orderDate: "01/03/2020", 
@@ -35,14 +45,19 @@ function getOrders(customerID) {
 }
 
 app.get(`/${service}/`, function(req,res){
-  console.log("Get orders for customer ID: " + req.query.customerID);
+  logger.info({
+    message: "Get orders for customer ID: ",
+    params: [req.query.customerID]
+  });
 
   awsParamStore.getParameter( '/mystore/simulate-db-failure', { region: 'ap-southeast-2' } )
     .then( (simulateDBFailure) => {
 
-      let failRate = parseInt(simulateDBFailure.Value);
+      let failRatePercentage = parseInt(simulateDBFailure.Value) / 100;
 
-      if ( failRate > 0 && (Math.floor(Math.random() * (Math.floor(100 / failRate))) + 1) == 1 ) {
+      let randomNum = Math.random();   
+
+      if ( failRatePercentage > 0 && randomNum >= failRatePercentage ) {
         res.status(503).send(JSON.stringify({ "Error:" : "Failed to get customer orders. Simulated DB failure." }));
     } else {
       res.send(getOrders(parseInt(req.query.customerID)));   
@@ -57,5 +72,9 @@ app.get(`/${service}/status`, function(req,res){
 });
 
 app.listen(port, function (){
-  console.log(`Service ${service} running on port: ${port}`);
+  logger.info({
+    message: 'Service running',
+    service: service,
+    port: port
+  });
 });
