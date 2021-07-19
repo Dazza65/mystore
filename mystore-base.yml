@@ -198,12 +198,17 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub "${AWS::StackName}-ecs"
-      GroupDescription: Allows traffic on port 8080 into the ECS container VPC
+      GroupDescription: Allows external traffic on port 8080 into the ECS container VPC and 443 for ES domain
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '8080'
           ToPort: '8080'
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: 0.0.0.0/0
+        
       Tags:
       - Key: Name
         Value: !Join [ ":", [ !Ref "AWS::StackName", ECSSecurityGroup ] ]
@@ -272,22 +277,6 @@ Resources:
       Name: mystore
       Vpc: !Ref VPC
 
-  ECSExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: mystore-ecs-execution-role
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-        - arn:aws:iam::aws:policy/CloudWatchFullAccess
-        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
-        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-  
   SSMParameterDBFailure:
     Type: AWS::SSM::Parameter
     Properties:
@@ -382,8 +371,3 @@ Outputs:
     Value: !Ref ALBListener
     Export:
       Name: !Join [ ":", [ !Ref "AWS::StackName", ALBListener ] ]
-  ECSExecutionRoleArn:
-    Description: ECS execution role
-    Value: !GetAtt ECSExecutionRole.Arn
-    Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", ECSExecutionRole ] ]
